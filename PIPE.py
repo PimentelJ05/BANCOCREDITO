@@ -2,6 +2,7 @@ import os
 import requests
 from tabulate import tabulate
 import pandas as pd
+from datetime import datetime
 
 # Configurações básicas
 base_url = 'https://api.pipedrive.com/v1'
@@ -49,11 +50,31 @@ stages = [
 # Coleta os resultados
 results = [get_deal_count(stage['id'], stage['name']) for stage in stages]
 
-# Exibe a tabela formatada
-display_table("Negócios Abertos por Estágio", results)
+# Adiciona a data atual às novas atualizações
+current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+for result in results:
+    result['Date'] = current_date
 
 # Converte os resultados em DataFrame
 df_results = pd.DataFrame(results)
+
+# Nome do arquivo para armazenar os dados históricos
+file_name = 'deals_data.csv'
+
+try:
+    # Tenta carregar os dados históricos se o arquivo existir
+    if os.path.exists(file_name):
+        df_existing = pd.read_csv(file_name)
+        # Concatena os dados existentes com os novos dados
+        df_results = pd.concat([df_existing, df_results], ignore_index=True)
+except Exception as e:
+    print(f"Erro ao carregar dados existentes: {e}")
+
+# Salva o DataFrame atualizado de volta ao arquivo
+df_results.to_csv(file_name, index=False)
+
+# Exibe a tabela formatada
+display_table("Negócios Abertos por Estágio", results)
 
 # Exibe o DataFrame
 print(df_results)
