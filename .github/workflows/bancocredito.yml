@@ -1,8 +1,9 @@
-name: Run Python Scripts Daily at 23:59
+name: Run Python Scripts Daily and Manually
 
 on:
   schedule:
-    - cron: '59 23 * * *'  # Executa todo dia às 23:59 UTC
+    - cron: '59 23 * * *'  
+  workflow_dispatch: 
 
 jobs:
   run-scripts:
@@ -15,14 +16,14 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'  # Especifique a versão do Python que você está usando
+        python-version: '3.x' 
 
     - name: Install dependencies
       run: |
-        pip install -r requirements.txt  
+        pip install -r requirements.txt  # Instala as dependências a partir do requirements.txt
 
     - name: Run KOMMO.py
-      run: python KOMMO.py  # Ajuste o nome do script conforme necessário
+      run: python KOMMO.py  # Executa o script KOMMO.py
 
     - name: Run PIPE.py
-      run: python PIPE.py  # Ajuste o nome do script conforme necessário
+      run: python PIPE.py  # Executa o script PIPE.py
