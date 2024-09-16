@@ -1,6 +1,6 @@
+import os
 import requests
 from tabulate import tabulate
-import tkinter as tk
 import pandas as pd
 
 # Configurações básicas
@@ -58,19 +58,25 @@ df_results = pd.DataFrame(results)
 # Exibe o DataFrame
 print(df_results)
 
-# Código para a janela tkinter
-def on_close():
-    print("A janela foi fechada.")
-    root.destroy()  # Fecha a janela
+# Verifica se está rodando em um ambiente com display gráfico
+if os.getenv('DISPLAY'):
+    import tkinter as tk
+    
+    # Código para exibir janela Tkinter com notificação
+    def on_close():
+        print("A janela foi fechada.")
+        root.destroy()  # Fecha a janela
 
-# Configuração da janela
-root = tk.Tk()
-root.title("Notificação de Execução")
-label = tk.Label(root, text="O script foi executado. Feche esta janela quando terminar.")
-label.pack(padx=20, pady=20)
+    # Configuração da janela
+    root = tk.Tk()
+    root.title("Notificação de Execução")
+    label = tk.Label(root, text="O script foi executado. Feche esta janela quando terminar.")
+    label.pack(padx=20, pady=20)
 
-# Configuração do botão de fechar
-root.protocol("WM_DELETE_WINDOW", on_close)
+    # Configuração do botão de fechar
+    root.protocol("WM_DELETE_WINDOW", on_close)
 
-# Executa a janela
-root.mainloop()
+    # Executa a janela
+    root.mainloop()
+else:
+    print("Ambiente headless detectado, Tkinter desativado.")
