@@ -2,6 +2,7 @@ import os
 import requests
 from tabulate import tabulate
 import pandas as pd
+from datetime import datetime
 
 # Configurações básicas
 BASE_URL = 'https://creditoessencial.kommo.com/api/v4/leads'
@@ -12,6 +13,7 @@ access_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImIyOWM4YTNkNjhhMzQx
 refresh_token = 'def50200d7fea6f4f07c6a22983e07d135303765bc4d9df6a41141ce14ae4b7586230763a3c6a77a20861ab16bd4755ec1e0454e01f94f73805edbabb68eb0322cd7494539dbc137be0834457ad5a353d391390cd366d48866293771f4400a70d7c82fc42b85a2df2f783fb689da0e589571fce27e6d88d545697fae23b3c7fc064c0011f13b70aa620bdc542d992eaa184ceebf098db48dbd14bca53f54773298e434a0223211d2317fca6a13c44028cecfb54c8dccdaa00498892a9f8345419d6d146cd894324f8429b3343d1a779e4e0dc3cb7c98146afe8834b34d7a53c31a7c061767860f750691d448d8827f47ed26856ce7586f8a433401f4dc61dfe9c136e66f4e444056d511c67f7f6b28c9ff90e82d1a967b603559c75ac74ae99b781534dad68bbf82406410ba99086242248c8bb3925362971ad8a5cbc61df8547811985a0f5a7bbf73ad01bfb784c641a68e2f9740dcb44a067e12da10c07b4d9db42fcef05d0282199360a7d9e4b48ade71e9b8719af340a8df809e111b243a03e31d124fca2cdd4fbfeba28cb5846a94fe34e0744bd334d057fdf3711dafac270c66385cbe526c7ae337848f7b355aae121867298d2ae825823e5ac64f1b0af1905bfcffc4ee0c6ab27c3e82d2a36704a3d324e41c4a02731f7ec3e6a5467e5df32586a07c575829c40a20c0d1'
 client_id = 'a137738a-4c0d-44cd-9c8e-f2c35734c62e'
 client_secret = 'f7fojh7YZP7SFaJ9ivd2kZ67wD8JTjw1AFfh0Ozv1FX7lhoZkwFhz3Q6UlTDNgdf'
+
 
 def renovar_access_token(refresh_token):
     """
@@ -110,7 +112,8 @@ def obter_contagem_leads_atual_por_funil(access_token, refresh_token, pipeline_i
                 contagem_leads_atual_por_funil.append({
                     'Funil': funil_nome,
                     'Status': status_nome,
-                    'Leads': total_leads if total_leads is not None else 0
+                    'Leads': total_leads if total_leads is not None else 0,
+                    'Date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 })
 
     return contagem_leads_atual_por_funil, erros
@@ -149,11 +152,26 @@ pipeline_ids_with_statuses = {
 leads_atual, erros = obter_contagem_leads_atual_por_funil(access_token, refresh_token, pipeline_ids_with_statuses, pipeline_names)
 
 # Converte os resultados em DataFrame
-df_leads = pd.DataFrame(leads_atual)
+df_leads_today = pd.DataFrame(leads_atual)
+
+# Nome do arquivo para armazenar os dados históricos
+file_name = 'leads_data.csv'
+
+# Tenta carregar os dados históricos se o arquivo existir
+if os.path.exists(file_name):
+    df_historical = pd.read_csv(file_name)
+    # Combina os dados históricos e os novos lado a lado com base em 'Funil' e 'Status'
+    df_combined = pd.merge(df_historical, df_leads_today, on=['Funil', 'Status'], suffixes=('_Ontem', '_Hoje'))
+else:
+    # Se não houver histórico, os dados de hoje são os iniciais
+    df_combined = df_leads_today
+
+# Salva o DataFrame atualizado de volta ao arquivo
+df_combined.to_csv(file_name, index=False)
 
 # Exibe o DataFrame de Leads
-print("\nTabela de Leads:")
-print(df_leads)
+print("\nTabela de Leads Atualizada:")
+print(tabulate(df_combined, headers='keys', tablefmt='grid'))
 
 # Verifica se está rodando em um ambiente com display gráfico
 if os.getenv('DISPLAY'):
